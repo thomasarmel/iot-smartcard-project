@@ -32,6 +32,8 @@ public class SmartCardProject extends Applet {
 		smartCardProject.privateRSAKey = kpg.getPrivate();
 		
 	}
+	
+	// TODO: use https://github.com/neonlzf/smartcard/blob/master/Code/OnCard/DES/RSA.java
 
 	public void process(APDU apdu) {
 		// Good practice: Return 9000 on SELECT
