@@ -8,9 +8,8 @@ import javacard.framework.ISO7816;
 import javacard.framework.ISOException;
 import javacard.framework.APDU;
 import javacard.framework.Util;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.KeyPair;
+import javacard.security.KeyPair;
+import javacard.security.KeyBuilder;
 
 
 public class SmartCardProject extends Applet {
@@ -18,8 +17,8 @@ public class SmartCardProject extends Applet {
 	private final static byte[] hello=
 	{0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x72, 0x6f, 0x62, 0x65, 0x72, 0x74};
 	
-	private java.security.Key publicRSAKey = null;
-	private java.security.Key privateRSAKey = null;
+	private javacard.security.PublicKey publicRSAKey = null;
+	private javacard.security.PrivateKey privateRSAKey = null;
 	
 	public static void install(byte[] buffer, short offset, byte length) 
 	
@@ -27,17 +26,10 @@ public class SmartCardProject extends Applet {
 		// GP-compliant JavaCard applet registration
 		SmartCardProject smartCardProject = new SmartCardProject();
 		smartCardProject.register();
-		try
-		{
-			KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-			kpg.initialize(512);
-			KeyPair kp = kpg.generateKeyPair();
-			smartCardProject.publicRSAKey = kp.getPublic();
-			smartCardProject.privateRSAKey = kp.getPrivate();
-		}
-		catch (NoSuchAlgorithmException e)
-		{
-		}
+		
+		KeyPair kpg = new KeyPair(KeyPair.ALG_RSA, KeyBuilder.LENGTH_RSA_512);
+		smartCardProject.publicRSAKey = kpg.getPublic();
+		smartCardProject.privateRSAKey = kpg.getPrivate();
 		
 	}
 
