@@ -83,5 +83,15 @@ https://www.infoworld.com/article/2076450/how-to-write-a-java-card-applet--a-dev
 
 `00 40 00 00 0C`
 
+## Build project
 
-export JAVACARD_SDK_211_JAR=~/oracle_javacard_sdks/jc211_kit/bin/api.jar
+First set **JAVACARD_SDK_211_JAR** env variable to your javacard SDK 211 api.jar
+
+`export JAVACARD_SDK_211_JAR=/path/to/oracle_javacard_sdks/jc211_kit/bin/api.jar`
+
+Then build the project
+
+```
+chmod +x build.sh
+./build.sh
+```
