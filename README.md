@@ -82,3 +82,6 @@ https://www.infoworld.com/article/2076450/how-to-write-a-java-card-applet--a-dev
 ### Run command 0x40 without parameter:
 
 `00 40 00 00 0C`
+
+
+export JAVACARD_SDK_211_JAR=~/oracle_javacard_sdks/jc211_kit/bin/api.jar
