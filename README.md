@@ -25,3 +25,35 @@ get_status -element 40
 card_disconnect
 release_context
 ```
+
+### Upload cap to card:
+
+```
+mode_201
+enable_trace
+enable_timer
+establish_contex
+card_connect
+select -AID A000000018434D00
+open_sc -security 3 -keyind 0 -keyver 0 -key 47454d5850524553534f53414d504c45 -keyDerivation visa2
+install -file helloWorld/javacard/helloWorld.cap -sdAID A000000018434D00 -nvCodeLimit 4000
+card_disconnect
+release_context
+```
+
+### Delete installed applet on card:
+
+```
+mode_201
+gemXpressoPro
+enable_trace
+enable_timer
+establish_context
+card_connect
+select -AID A000000018434D00
+open_sc -security 0 -keyind 0 -keyver 0 -key 47454d5850524553534f53414d504c45
+delete -AID a00000006203010c060102
+delete -AID 0a0000006203010c0601
+card_disconnect
+release_context
+```
