@@ -1,6 +1,22 @@
 RESET
+
+# Select applet
 00 A4 04 00 08 A0 00 00 00 62 03 01 0C 06 01 02
+
+# Auth
 00 20 00 00 04 00 00 00 00
+
+#Get auth status
 A0 C0 00 00 02
+
+# Hello for checking reponse size
 00 10 00 00 00
+
+# Actual hello
 00 10 00 00 0C
+
+# Get public key: size ?
+00 30 00 00
+
+# Actual get public key
+00 30 00 00 47

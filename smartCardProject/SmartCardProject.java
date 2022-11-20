@@ -8,6 +8,8 @@ import javacard.framework.Util;
 import javacard.security.KeyPair;
 import javacard.security.KeyBuilder;
 import javacard.framework.OwnerPIN;
+import javacard.security.RSAPublicKey;
+import javacard.security.RSAPrivateKey;
 
 // use OwnerPIN for PIN code ?
 
@@ -18,6 +20,9 @@ public class SmartCardProject extends Applet
 	// ie: 0x2n -> login, logout, change pin...
 	private static final byte INST_HELLO = 0x10;
 	private static final byte INST_AUTH = 0x20;
+	private static final byte INST_LOCK = 0x21; // Logout
+	private static final byte INST_CHANGE_PIN = 0x22;
+	private static final byte INST_GET_PUB_KEY = 0x30;
 	
 	
 	public static final short DEFAULT_PIN_CODE = 0000;
@@ -30,24 +35,12 @@ public class SmartCardProject extends Applet
 	private final static byte[] OK_RESPONSE = {'O', 'K'};
 	private final static byte[] KO_RESPONSE = {'K', 'O'};
 	
-	private javacard.security.PublicKey publicRSAKey = null;
-	private javacard.security.PrivateKey privateRSAKey = null;
+	private javacard.security.RSAPublicKey publicRSAKey = null;
+	private javacard.security.RSAPrivateKey privateRSAKey = null;
 	private short pinCode = DEFAULT_PIN_CODE;
 	private boolean cardConnected = false;
 	
 	private OwnerPIN ownerPin;
-	
-	private class APDUData
-	{
-		public APDU apdu;
-		public byte[] apduBuffer;
-		
-		public APDUData(APDU apdu, byte[] apduBuffer)
-		{
-			this.apdu = apdu;
-			this.apduBuffer = apduBuffer;
-		}
-	}
 	
 	public static void install(byte[] buffer, short offset, byte length)
 	{
@@ -56,8 +49,9 @@ public class SmartCardProject extends Applet
 		smartCardProject.register();
 		
 		KeyPair kpg = new KeyPair(KeyPair.ALG_RSA, KeyBuilder.LENGTH_RSA_512);
-		smartCardProject.publicRSAKey = kpg.getPublic();
-		smartCardProject.privateRSAKey = kpg.getPrivate();
+		kpg.genKeyPair();
+		smartCardProject.publicRSAKey = (RSAPublicKey)kpg.getPublic();
+		smartCardProject.privateRSAKey = (RSAPrivateKey)kpg.getPrivate();
 		
 	}
 	
@@ -97,6 +91,9 @@ public class SmartCardProject extends Applet
 			break;
 		case INST_AUTH:
 			instAuth(apdu);
+			break;
+		case INST_GET_PUB_KEY:
+			instGetPubKey(apdu);
 			break;
 		default:
 			// good practice: If you don't know the INStruction, say so:
@@ -139,7 +136,30 @@ public class SmartCardProject extends Applet
 			return;
         	}
         	
+        	// Code is incorrect
 		sendAPDUResponse(apdu, KO_RESPONSE);
+	}
+	
+	// https://stackoverflow.com/questions/30458873/how-to-transfer-rsa-public-private-key-outside-the-card
+	private void instGetPubKey(APDU apdu)
+	{
+	        byte[] apduBuffer = apdu.getBuffer();
+        	short bufferDataOffset = ISO7816.OFFSET_CDATA;
+        	
+		// Copy directly exponent into APDU buffer. Note: we let 2 bytes free before for storing exponent size
+        	short pubKeyExponentSize = publicRSAKey.getExponent(apduBuffer, (short) (2 + bufferDataOffset));
+        	
+        	// Store exponent size before exponent, in APDU buffer
+        	Util.setShort(apduBuffer, bufferDataOffset, pubKeyExponentSize);
+        	
+        	// Copy directly modulus into APDU buffer. Note: we let 2 bytes free before for storing modulus size
+        	short pubKeyModulusSize = publicRSAKey.getModulus(apduBuffer, (short) (2 + bufferDataOffset + 2 + pubKeyExponentSize));
+        	
+        	// Store modulus size before modulus, in APDU buffer
+        	Util.setShort(apduBuffer, (short) (bufferDataOffset + 2 + pubKeyExponentSize), pubKeyModulusSize);
+        	
+        	// Use APDU buffer directly instead of copying it with sendAPDUResponse()
+        	apdu.setOutgoingAndSend(bufferDataOffset, (short) (2 + pubKeyExponentSize + 2 + pubKeyModulusSize));
 	}
 	
 	private void sendAPDUResponse(APDU apdu, byte[] response)
