@@ -107,3 +107,14 @@ If a command expects an response, like *hello* instruction, then you have to sen
 1. First time with **Le = 0** `0x00 0x10 0x00 0x00 0x00` or simply `0x00 0x10 0x00 0x00`
 2. You receive a **Wrong length Le** response, `0x6C 0xnn`
 3. Send the command again with the good Le: `0x00 0x10 0x00 0x00 0xnn`
+
+### RSA public key format
+
+The command for fectching the RSA public key from the smartcard is:
+1. `0x00 0x30 0x00 0x00`
+2. response -> `0x6C 0xnn` (as explained above)
+3. `0x00 0x30 0x00 0x00 0xnn`
+
+The public key format is as following:
+
+[**2 bytes - exponent size**][**exponent**][**2 bytes - modulus size**][**modulus**]
