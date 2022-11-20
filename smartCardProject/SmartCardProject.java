@@ -86,10 +86,10 @@ public class SmartCardProject extends Applet
         	}
 		
 		// Retrieve command data
-		/*short bytesLeft = Util.makeShort((byte) 0x00, apduBuffer[ISO7816.OFFSET_LC]);
+		short bytesLeft = Util.makeShort((byte) 0x00, apduBuffer[ISO7816.OFFSET_LC]);
         	if (bytesLeft != apdu.setIncomingAndReceive()) {
             		ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-        	}*/
+        	}
 		
 		switch (apduBuffer[ISO7816.OFFSET_INS]) {
 		case INST_HELLO:
@@ -123,11 +123,6 @@ public class SmartCardProject extends Applet
 			sendAPDUResponse(apdu, KO_RESPONSE);
 			return;
 		}
-		
-		short bytesLeft = apdu.getBuffer()[ISO7816.OFFSET_LC];
-        	if (bytesLeft != apdu.setIncomingAndReceive()) {
-            		ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-        	}
 		
 		byte[] apduBuffer = apdu.getBuffer();
 		
