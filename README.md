@@ -118,3 +118,5 @@ The command for fectching the RSA public key from the smartcard is:
 The public key format is as following:
 
 [**2 bytes - exponent size**][**exponent**][**2 bytes - modulus size**][**modulus**]
+
+(Note that exponent will likely be *0x01 0x00 0x01*, 65537)
