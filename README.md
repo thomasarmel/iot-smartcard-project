@@ -95,3 +95,15 @@ Then build the project
 chmod +x build.sh
 ./build.sh
 ```
+
+
+## Good to know
+
+### Fetch response
+In case card responds `0x61 0xnn`, it means **nn bytes of response need to be fetched**, using command `0xA0 0xC0 0x00 0x00 0xnn`
+
+### Commands that expect an response
+If a command expects an response, like *hello* instruction, then you have to send it twice.
+1. First time with **Le = 0** `0x00 0x10 0x00 0x00 0x00` or simply `0x00 0x10 0x00 0x00`
+2. You receive a **Wrong length Le** response, `0x6C 0xnn`
+3. Send the command again with the good Le: `0x00 0x10 0x00 0x00 0xnn`
