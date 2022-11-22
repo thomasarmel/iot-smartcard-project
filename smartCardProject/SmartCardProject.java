@@ -10,6 +10,10 @@ import javacard.security.KeyBuilder;
 import javacard.framework.OwnerPIN;
 import javacard.security.RSAPublicKey;
 import javacard.security.RSAPrivateKey;
+/*import javacard.security.MessageDigest;
+import javacard.security.MessageDigest.OneShot;
+import javacard.security.CryptoException;*/
+import javacardx.crypto.Cipher;
 
 // use OwnerPIN for PIN code ?
 
@@ -23,6 +27,7 @@ public class SmartCardProject extends Applet
 	private static final byte INST_LOCK = 0x21; // Logout
 	private static final byte INST_CHANGE_PIN = 0x22;
 	private static final byte INST_GET_PUB_KEY = 0x30;
+	private static final byte INST_SIGN_MSG = 0x31;
 	
 	
 	public static final short DEFAULT_PIN_CODE = 0000;
@@ -80,6 +85,7 @@ public class SmartCardProject extends Applet
         	}
 		
 		// Retrieve command data
+		// (short) (apduBuffer[ISO7816.OFFSET_LC] & 0x00FF);
 		short bytesLeft = Util.makeShort((byte) 0x00, apduBuffer[ISO7816.OFFSET_LC]);
         	if (bytesLeft != apdu.setIncomingAndReceive()) {
             		ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
@@ -94,6 +100,9 @@ public class SmartCardProject extends Applet
 			break;
 		case INST_GET_PUB_KEY:
 			instGetPubKey(apdu);
+			break;
+		case INST_SIGN_MSG:
+			instSignMsg(apdu);
 			break;
 		default:
 			// good practice: If you don't know the INStruction, say so:
@@ -160,6 +169,22 @@ public class SmartCardProject extends Applet
         	
         	// Use APDU buffer directly instead of copying it with sendAPDUResponse()
         	apdu.setOutgoingAndSend(bufferDataOffset, (short) (2 + pubKeyExponentSize + 2 + pubKeyModulusSize));
+	}
+	
+	private void instSignMsg(APDU apdu)
+	{
+        	byte[] apduBuffer = apdu.getBuffer();
+        	short msgSize = apduBuffer[ISO7816.OFFSET_LC];
+        	
+        	byte[] tmpMsgCopy = new byte[msgSize];
+        	
+        	Util.arrayCopy(apduBuffer, (short)ISO7816.OFFSET_CDATA, tmpMsgCopy, (short)0, (short)msgSize);
+        	
+        	Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
+        	cipher.init(privateRSAKey, Cipher.MODE_ENCRYPT);
+
+        	short signSize = cipher.doFinal(tmpMsgCopy, (short) 0, (short) tmpMsgCopy.length, apduBuffer, ISO7816.OFFSET_CDATA);
+        	apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, signSize);
 	}
 	
 	private void sendAPDUResponse(APDU apdu, byte[] response)
