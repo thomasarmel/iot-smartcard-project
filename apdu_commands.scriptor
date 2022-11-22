@@ -26,3 +26,9 @@ A0 C0 00 00 02
 
 # Fetch signature
 A0 C0 00 00 40
+
+# Logout
+00 21 00 00
+
+# Get logout status
+00 21 00 00 02
