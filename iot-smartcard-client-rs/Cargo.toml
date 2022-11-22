@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 apdu = "0.3.0"
+pcsc = "2.7.0"
+anyhow = "1.0.66"
+thiserror = "1.0.37"
