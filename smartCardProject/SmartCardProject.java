@@ -10,9 +10,6 @@ import javacard.security.KeyBuilder;
 import javacard.framework.OwnerPIN;
 import javacard.security.RSAPublicKey;
 import javacard.security.RSAPrivateKey;
-/*import javacard.security.MessageDigest;
-import javacard.security.MessageDigest.OneShot;
-import javacard.security.CryptoException;*/
 import javacardx.crypto.Cipher;
 
 // use OwnerPIN for PIN code ?
@@ -152,6 +149,7 @@ public class SmartCardProject extends Applet
 	// https://stackoverflow.com/questions/30458873/how-to-transfer-rsa-public-private-key-outside-the-card
 	private void instGetPubKey(APDU apdu)
 	{
+		checkAuthenticated();
 	        byte[] apduBuffer = apdu.getBuffer();
         	short bufferDataOffset = ISO7816.OFFSET_CDATA;
         	
@@ -173,6 +171,7 @@ public class SmartCardProject extends Applet
 	
 	private void instSignMsg(APDU apdu)
 	{
+		checkAuthenticated();
         	byte[] apduBuffer = apdu.getBuffer();
         	short msgSize = apduBuffer[ISO7816.OFFSET_LC];
         	
@@ -187,10 +186,23 @@ public class SmartCardProject extends Applet
         	apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, signSize);
 	}
 	
+	/// Miscellaneous functions
+	
 	private void sendAPDUResponse(APDU apdu, byte[] response)
 	{
 		byte[] buf = apdu.getBuffer();
 		Util.arrayCopy(response, (short)0, buf, ISO7816.OFFSET_CDATA, (short)response.length);
 		apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, (short)response.length);
 	}
+	
+	// To be called before each authenticated instruction. In case pin hasn't been validated, throw exception
+	// https://docs.oracle.com/javacard/3.0.5/api/javacard/framework/ISO7816.html
+	// It will send back the error through APDU response
+	private void checkAuthenticated()
+	{
+        	if (!ownerPin.isValidated())
+        	{
+        		ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+        	}
+    	}
 }
