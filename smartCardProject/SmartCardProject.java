@@ -12,8 +12,6 @@ import javacard.security.RSAPublicKey;
 import javacard.security.RSAPrivateKey;
 import javacardx.crypto.Cipher;
 
-// use OwnerPIN for PIN code ?
-
 public class SmartCardProject extends Applet
 {
 	/// Instructions list
