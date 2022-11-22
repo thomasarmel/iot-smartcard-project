@@ -31,6 +31,7 @@ impl SmartCard {
         })
     }
 
+    // TODO: concatenate check size commands
     pub fn send_apdu_command(&self, apdu_command: apdu::Command) -> Result<apdu::Response, anyhow::Error> {
         let mut rapdu_buf = [0; MAX_BUFFER_SIZE];
 
