@@ -15,6 +15,19 @@ RESET
 #Get auth status
 A0 C0 00 00 02
 
+# Change pin -> 1234
+# Note: also lock the card
+00 22 00 00 04 01 02 03 04
+
+# Get change pin status
+A0 C0 00 00 02
+
+# Auth
+00 20 00 00 04 01 02 03 04
+
+#Get auth status
+A0 C0 00 00 02
+
 # Get public key: size ?
 00 30 00 00
 
@@ -32,3 +45,16 @@ A0 C0 00 00 40
 
 # Get logout status
 00 21 00 00 02
+
+# Auth
+00 20 00 00 04 01 02 03 04
+
+#Get auth status
+A0 C0 00 00 02
+
+# Change pin -> 0000
+# Note: also lock the card
+00 22 00 00 04 00 00 00 00
+
+# Get change pin status
+A0 C0 00 00 02

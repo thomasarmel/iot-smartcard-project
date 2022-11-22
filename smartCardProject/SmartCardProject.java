@@ -98,6 +98,9 @@ public class SmartCardProject extends Applet
 		case INST_LOCK:
 			instLock(apdu);
 			break;
+		case INST_CHANGE_PIN:
+			instChangePin(apdu);
+			break;
 		case INST_GET_PUB_KEY:
 			instGetPubKey(apdu);
 			break;
@@ -159,6 +162,24 @@ public class SmartCardProject extends Applet
 		ownerPin.reset();
 		
 		sendAPDUResponse(apdu, OK_RESPONSE);
+	}
+	
+	private void instChangePin(APDU apdu) // TODO: error message more clear
+	{
+		checkAuthenticated();
+		
+		byte[] apduBuffer = apdu.getBuffer();
+
+		// Wrong size
+	        if ((short)apduBuffer[ISO7816.OFFSET_LC] != PIN_SIZE)
+        	{
+            		sendAPDUResponse(apdu, KO_RESPONSE);
+        	}
+
+		// Change pin
+        	ownerPin.update(apduBuffer, ISO7816.OFFSET_CDATA, (byte)PIN_SIZE);
+        	
+        	sendAPDUResponse(apdu, OK_RESPONSE);
 	}
 	
 	// https://stackoverflow.com/questions/30458873/how-to-transfer-rsa-public-private-key-outside-the-card
