@@ -1,6 +1,5 @@
 use std::io::{stdin, stdout, Write};
-use ibig::{modular::ModuloRing, UBig};
-use iot_smartcard_client_rs::smart_card_commands::SmartCardCommands;
+use iot_smartcard_client_rs::{smart_card_commands::SmartCardCommands, rsa_public_key::RSAPublicKey};
 
 fn vec8_to_u32(input: &[u8]) -> u32 {
     input.iter().fold(0, |accum, v| (accum << 8) + *v as u32)
@@ -9,7 +8,7 @@ fn vec8_to_u32(input: &[u8]) -> u32 {
 fn shell() {
     let smart_card_commands = SmartCardCommands::new().unwrap();
 
-    let mut exponent_and_modulus : Option<(UBig, UBig)> = None;
+    let mut rsa_public_key : Option<RSAPublicKey> = None;
 
     smart_card_commands.select_applet();
 
@@ -46,18 +45,17 @@ fn shell() {
             "gpubk" => {
                 let response = smart_card_commands.get_public_key();
                 let public_key = smart_card_commands.get_actual_public_key(response);
-                println!("public key: {:x?}", public_key);
+                println!("Received public key: {:02X?}", public_key);
                 let exponent_size = vec8_to_u32(&public_key[0..2]);
                 let modulus_size = vec8_to_u32(&public_key[2 + exponent_size as usize..2 + exponent_size as usize + 2]);
-                exponent_and_modulus = Some((
-                                                UBig::from_be_bytes(&public_key[2..2 + exponent_size as usize]),
-                                                UBig::from_be_bytes(&public_key[2 + exponent_size as usize + 2..2 + exponent_size as usize + 2 + modulus_size as usize])
-                    ));
-                println!("exponent: {}", exponent_and_modulus.as_ref().unwrap().0);
-                println!("modulus: {}", exponent_and_modulus.as_ref().unwrap().1);
+                rsa_public_key = Some(RSAPublicKey::new(
+                    &public_key[2..2 + exponent_size as usize],
+                    &public_key[2 + exponent_size as usize + 2..2 + exponent_size as usize + 2 + modulus_size as usize]
+                ));
+                println!("{}", rsa_public_key.as_ref().unwrap());
             },
             "gsign" => {
-                if exponent_and_modulus.as_ref().is_none() {
+                if rsa_public_key.is_none() {
                     println!("Please get the public key first!");
                     continue;
                 }
@@ -65,19 +63,14 @@ fn shell() {
                 let mut message_to_sign = String::new();
                 stdin().read_line(&mut message_to_sign).unwrap();
                 let message_to_sign = message_to_sign.trim();
-                let message_size = message_to_sign.len();
                 let signature_size = smart_card_commands.ask_for_signature(message_to_sign);
-                let signature = UBig::from_be_bytes(&*smart_card_commands.fetch_signature(signature_size));
-                let ring = ModuloRing::new(&(exponent_and_modulus.as_ref().unwrap().1));
-                println!("received signature: {:?}", signature);
-                let decrypted_signature = ring.from(&signature).pow(&(exponent_and_modulus.as_ref().unwrap().0)).residue().to_be_bytes();
-                // Remove padding
-                let decrypted_signature = std::str::from_utf8(&decrypted_signature[decrypted_signature.len() - message_size..]).unwrap();
-                println!("decrypted signature: {}", decrypted_signature);
-                if decrypted_signature == message_to_sign {
-                    println!("Signature is valid!");
+                let signature = smart_card_commands.fetch_signature(signature_size);
+                println!("Received signature: {:02X?}", signature);
+                println!("Checking signature...");
+                if rsa_public_key.as_ref().unwrap().check_signature(message_to_sign.as_bytes(), &signature) {
+                    println!("The signature is valid!");
                 } else {
-                    println!("Signature is invalid!");
+                    println!("The signature is invalid!");
                 }
             },
             "logout" => {
