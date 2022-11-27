@@ -1,6 +1,5 @@
 use std::io::{stdin, stdout, Write};
-use ibig::{ibig, modular::ModuloRing, ubig, UBig};
-
+use ibig::{modular::ModuloRing, UBig};
 use iot_smartcard_client_rs::smart_card_commands::SmartCardCommands;
 
 fn vec8_to_u32(input: &[u8]) -> u32 {
@@ -10,7 +9,7 @@ fn vec8_to_u32(input: &[u8]) -> u32 {
 fn shell() {
     let smart_card_commands = SmartCardCommands::new().unwrap();
     let mut _exponent: UBig = UBig::from(65537 as u32);
-    let mut _modulus = ubig!(0b010001);
+    let mut _modulus = UBig::from(0 as u32);
 
     smart_card_commands.select_applet();
 
@@ -21,7 +20,7 @@ fn shell() {
         let mut input = String::new();
         stdin().read_line(&mut input).unwrap();
 
-        let mut command = input.split_whitespace().next().unwrap();
+        let command = input.split_whitespace().next().unwrap();
 
         match command {
             "send_hello_world" => {
@@ -63,18 +62,23 @@ fn shell() {
             },
             "gsign" => {
                 println!("Please enter the message you want to sign:");
-                let mut message = String::new();
-                stdin().read_line(&mut message).unwrap();
-                let message = message.trim();
-                let response = smart_card_commands.ask_for_signature(message);
-                let signature = smart_card_commands.fetch_signature(response);
-                let signature_to_int = UBig::from_be_bytes(&signature);
-                let message_to_int = UBig::from_be_bytes(message.as_bytes());
+                let mut message_to_sign = String::new();
+                stdin().read_line(&mut message_to_sign).unwrap();
+                let message_to_sign = message_to_sign.trim();
+                let message_size = message_to_sign.len();
+                let signature_size = smart_card_commands.ask_for_signature(message_to_sign);
+                let signature = UBig::from_be_bytes(&*smart_card_commands.fetch_signature(signature_size));
                 let ring = ModuloRing::new(&_modulus);
-                //println!("verify signature: {}", ModuloRing::new(&ubig!(modulus_temp_2)).from(signature_to_int).pow_signed(&ibig!(_exponent)) == ring.from(message_to_int));
-                println!("signature: {:?}", signature);
-                println!("decrypted signature: {}", ring.from(signature_to_int).pow(&_exponent));
-                println!("message: {}", ring.from(message_to_int));
+                println!("received signature: {:?}", signature);
+                let decrypted_signature = ring.from(&signature).pow(&_exponent).residue().to_be_bytes();
+                // Remove padding
+                let decrypted_signature = std::str::from_utf8(&decrypted_signature[decrypted_signature.len() - message_size..]).unwrap();
+                println!("decrypted signature: {}", decrypted_signature);
+                if decrypted_signature == message_to_sign {
+                    println!("Signature is valid!");
+                } else {
+                    println!("Signature is invalid!");
+                }
             },
             "logout" => {
                 let response = smart_card_commands.logout();

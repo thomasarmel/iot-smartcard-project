@@ -1,13 +1,5 @@
 use crate::smart_card::SmartCard;
 
-fn string_to_vec_hex(s: &str) -> Vec<u8> {
-    let mut v: Vec<u8> = Vec::new();
-    for c in s.chars() {
-        v.push(c.to_digit(16).unwrap() as u8);
-    }
-    v
-}
-
 #[allow(dead_code)]
 pub struct SmartCardCommands {
     smart_card: SmartCard,
