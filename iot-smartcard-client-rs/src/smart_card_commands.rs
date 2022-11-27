@@ -106,13 +106,9 @@ impl SmartCardCommands {
     // Ask for signing &str
     // 00 31 00 00 nn nn ....
     pub fn ask_for_signature(&self, s: &str) -> u8 {
-        /*let mut v: Vec<u8> = Vec::new();
-        for c in s.chars() {
-            v.push(c.to_digit(16).unwrap() as u8);
-        }*/
         let ask_for_signing_apdu_command = apdu::Command::new_with_payload(0x00, 0x31, 0x00, 0x00, s.to_string().into_bytes());// vec![0x48, 0x65, 0x6C, 0x6C, 0x6F]);
         let ask_for_signing_apdu_response = self.smart_card.send_apdu_command(ask_for_signing_apdu_command).unwrap();
-        assert_eq!((0x61, 0x40), ask_for_signing_apdu_response.trailer); // OK
+        assert_eq!(0x61, ask_for_signing_apdu_response.trailer.0); // OK
         ask_for_signing_apdu_response.trailer.1
     }
 
