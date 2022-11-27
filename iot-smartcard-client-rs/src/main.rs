@@ -8,8 +8,8 @@ fn vec8_to_u32(input: &[u8]) -> u32 {
 
 fn shell() {
     let smart_card_commands = SmartCardCommands::new().unwrap();
-    let mut _exponent: UBig = UBig::from(65537 as u32);
-    let mut _modulus = UBig::from(0 as u32);
+
+    let mut exponent_and_modulus : Option<(UBig, UBig)> = None;
 
     smart_card_commands.select_applet();
 
@@ -36,15 +36,11 @@ fn shell() {
                 smart_card_commands.get_authentication_status(response);
             },
             "chpin" => {
-                /*println!("Please enter your old PIN:");
-                let mut old_pin = String::new();
-                stdin().read_line(&mut old_pin).unwrap();
-                let old_pin = old_pin.trim();*/
                 println!("Please enter your new PIN:");
                 let mut new_pin = String::new();
                 stdin().read_line(&mut new_pin).unwrap();
                 let new_pin = new_pin.trim();
-                let response = smart_card_commands.change_pin(/*old_pin, */new_pin);
+                let response = smart_card_commands.change_pin(new_pin);
                 smart_card_commands.get_change_pin_status(response);
             },
             "gpubk" => {
@@ -53,14 +49,18 @@ fn shell() {
                 println!("public key: {:x?}", public_key);
                 let exponent_size = vec8_to_u32(&public_key[0..2]);
                 let modulus_size = vec8_to_u32(&public_key[2 + exponent_size as usize..2 + exponent_size as usize + 2]);
-                _exponent = UBig::from_be_bytes(&public_key[2..2 + exponent_size as usize]);
-                _modulus = UBig::from_be_bytes(&public_key[2 + exponent_size as usize + 2..2 + exponent_size as usize + 2 + modulus_size as usize]);
-                println!("exponent size: {}", exponent_size);
-                println!("exponent: {}", _exponent);
-                println!("modulus size: {}", modulus_size);
-                println!("modulus: {}", _modulus);
+                exponent_and_modulus = Some((
+                                                UBig::from_be_bytes(&public_key[2..2 + exponent_size as usize]),
+                                                UBig::from_be_bytes(&public_key[2 + exponent_size as usize + 2..2 + exponent_size as usize + 2 + modulus_size as usize])
+                    ));
+                println!("exponent: {}", exponent_and_modulus.as_ref().unwrap().0);
+                println!("modulus: {}", exponent_and_modulus.as_ref().unwrap().1);
             },
             "gsign" => {
+                if exponent_and_modulus.as_ref().is_none() {
+                    println!("Please get the public key first!");
+                    continue;
+                }
                 println!("Please enter the message you want to sign:");
                 let mut message_to_sign = String::new();
                 stdin().read_line(&mut message_to_sign).unwrap();
@@ -68,9 +68,9 @@ fn shell() {
                 let message_size = message_to_sign.len();
                 let signature_size = smart_card_commands.ask_for_signature(message_to_sign);
                 let signature = UBig::from_be_bytes(&*smart_card_commands.fetch_signature(signature_size));
-                let ring = ModuloRing::new(&_modulus);
+                let ring = ModuloRing::new(&(exponent_and_modulus.as_ref().unwrap().1));
                 println!("received signature: {:?}", signature);
-                let decrypted_signature = ring.from(&signature).pow(&_exponent).residue().to_be_bytes();
+                let decrypted_signature = ring.from(&signature).pow(&(exponent_and_modulus.as_ref().unwrap().0)).residue().to_be_bytes();
                 // Remove padding
                 let decrypted_signature = std::str::from_utf8(&decrypted_signature[decrypted_signature.len() - message_size..]).unwrap();
                 println!("decrypted signature: {}", decrypted_signature);
