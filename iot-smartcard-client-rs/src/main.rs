@@ -1,12 +1,4 @@
-use std::env;
-use std::io::{Read, stdin, stdout, Write};
-use std::num::FpCategory::Zero;
-use std::path::Path;
-use std::process::{Child, Command, Stdio};
-use std::str::{from_utf8, FromStr};
-use openssl::bn::BigNum;
-use num_bigint::BigUint;
-use std::ops::{Mul, Rem, Shr};
+use std::io::{stdin, stdout, Write};
 use ibig::{ibig, modular::ModuloRing, ubig, UBig};
 
 use iot_smartcard_client_rs::smart_card_commands::SmartCardCommands;

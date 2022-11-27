@@ -11,6 +11,5 @@ pcsc = "2.7.0"
 anyhow = "1.0.66"
 thiserror = "1.0.37"
 hex = "0.4"
-openssl = { version = "0.10" }
 num-bigint = { version = "0.4" }
 ibig = "0.3.6"
