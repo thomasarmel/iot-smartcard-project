@@ -19,6 +19,7 @@ impl RSAPublicKey {
         let modulo_ring = ModuloRing::new(&self.modulus);
         let signature = UBig::from_be_bytes(signature);
         let decrypted_signature = modulo_ring.from(&signature).pow(&self.exponent).residue().to_be_bytes();
+        // The decrypted signature is padded before the actual signature, so we need to remove the padding
         &decrypted_signature[decrypted_signature.len() - message.len()..] == message
     }
 }
