@@ -9,7 +9,7 @@ fn vec8_to_u32(input: &[u8]) -> u32 {
 
 fn shell() {
     let smart_card_commands = SmartCardCommands::new().unwrap();
-    let mut _exponent: u32 = 65537;
+    let mut _exponent: UBig = UBig::from(65537 as u32);
     let mut _modulus = ubig!(0b010001);
 
     smart_card_commands.select_applet();
@@ -53,15 +53,13 @@ fn shell() {
                 let public_key = smart_card_commands.get_actual_public_key(response);
                 println!("public key: {:x?}", public_key);
                 let exponent_size = vec8_to_u32(&public_key[0..2]);
-                let exponent = vec8_to_u32(&public_key[2..2 + exponent_size as usize]);
                 let modulus_size = vec8_to_u32(&public_key[2 + exponent_size as usize..2 + exponent_size as usize + 2]);
-                let modulus = vec8_to_u32(&public_key[2 + exponent_size as usize + 2..2 + exponent_size as usize + 2 + modulus_size as usize]);
+                _exponent = UBig::from_be_bytes(&public_key[2..2 + exponent_size as usize]);
+                _modulus = UBig::from_be_bytes(&public_key[2 + exponent_size as usize + 2..2 + exponent_size as usize + 2 + modulus_size as usize]);
                 println!("exponent size: {}", exponent_size);
-                println!("exponent: {}", exponent);
+                println!("exponent: {}", _exponent);
                 println!("modulus size: {}", modulus_size);
-                println!("modulus: {}", modulus);
-                _exponent = exponent.clone();
-                _modulus = UBig::from(modulus);
+                println!("modulus: {}", _modulus);
             },
             "gsign" => {
                 println!("Please enter the message you want to sign:");
@@ -70,14 +68,12 @@ fn shell() {
                 let message = message.trim();
                 let response = smart_card_commands.ask_for_signature(message);
                 let signature = smart_card_commands.fetch_signature(response);
-                let signature_to_int = vec8_to_u32(&signature);
-                let message_to_int = vec8_to_u32(message.as_bytes());
-                let modulus_temp = _modulus.clone();
-                let modulus_temp_2 = _modulus.clone();
-                let ring = ModuloRing::new(&UBig::from(modulus_temp));
-                // println!("verify signature: {}", ModuloRing::new(&ubig!(modulus_temp_2)).from(signature_to_int).pow_signed(&ibig!(_exponent)) == ring.from(message_to_int));
+                let signature_to_int = UBig::from_be_bytes(&signature);
+                let message_to_int = UBig::from_be_bytes(message.as_bytes());
+                let ring = ModuloRing::new(&_modulus);
+                //println!("verify signature: {}", ModuloRing::new(&ubig!(modulus_temp_2)).from(signature_to_int).pow_signed(&ibig!(_exponent)) == ring.from(message_to_int));
                 println!("signature: {:?}", signature);
-                println!("decrypted signature: {}", ModuloRing::new(&modulus_temp_2).from(signature_to_int).pow_signed(&ibig!(65537)));
+                println!("decrypted signature: {}", ring.from(signature_to_int).pow(&_exponent));
                 println!("message: {}", ring.from(message_to_int));
             },
             "logout" => {
