@@ -22,6 +22,13 @@ impl RSAPublicKey {
         // The decrypted signature is padded before the actual signature, so we need to remove the padding
         &decrypted_signature[decrypted_signature.len() - message.len()..] == message
     }
+
+    pub fn decrypt_signature(&self, message: &[u8], signature: &[u8]) -> Vec<u8> {
+        let modulo_ring = ModuloRing::new(&self.modulus);
+        let signature = UBig::from_be_bytes(signature);
+        let decrypted_signature = modulo_ring.from(&signature).pow(&self.exponent).residue().to_be_bytes();
+        decrypted_signature[&decrypted_signature.len() - message.len()..].to_vec()
+    }
 }
 
 impl Display for RSAPublicKey {

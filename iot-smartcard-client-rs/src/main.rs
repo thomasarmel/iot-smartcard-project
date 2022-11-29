@@ -1,4 +1,7 @@
+use std::fs;
 use std::io::{stdin, stdout, Write};
+use std::path::Path;
+use std::str::from_utf8;
 use iot_smartcard_client_rs::{smart_card_commands::SmartCardCommands, rsa_public_key::RSAPublicKey};
 
 fn vec8_to_u32(input: &[u8]) -> u32 {
@@ -11,6 +14,9 @@ fn shell() {
     let mut rsa_public_key : Option<RSAPublicKey> = None;
 
     smart_card_commands.select_applet();
+
+    println!("Hello world!");
+    println!("To see the documentation of the different commands, type 'help' :)");
 
     loop {
         print!("> ");
@@ -72,7 +78,52 @@ fn shell() {
                 } else {
                     println!("The signature is invalid!");
                 }
-            },
+                println!("Signature: {:02X?}", signature);
+                println!("{}", std::env::current_dir().unwrap().display())
+            }
+            "gsign_file" => {
+                println!("Please enter the path to the file you want to sign (example: ./src/messages/hello.txt):");
+                let mut path = String::new();
+                stdin().read_line(&mut path).unwrap();
+                let path = path.trim();
+                let path = Path::new(&path);
+                println!("{}", path.display());
+                let message_to_sign = fs::read_to_string(path).unwrap();
+                let message_to_sign = message_to_sign.trim();
+                let signature_size = smart_card_commands.ask_for_signature(message_to_sign);
+                let signature = smart_card_commands.fetch_signature(signature_size);
+                println!("Received signature: {:02X?}", signature);
+                println!("Checking signature...");
+
+                let b = match rsa_public_key.as_ref().unwrap().check_signature(message_to_sign.as_bytes(), &signature) {
+                    true => {
+                        println!("The signature is valid!");
+                        true
+                    },
+                    false => {
+                        println!("The signature is invalid!");
+                        false
+                    },
+                };
+
+                let signature_decimal = signature.iter().map(|&b| format!("{:?}", b)).collect::<Vec<String>>().join("");
+                let signature_hexadecimal = hex::encode(&signature);
+                let signature_decrypted = rsa_public_key.as_ref().unwrap().decrypt_signature(message_to_sign.as_bytes(), &signature);
+                let signature_decrypted_utf8 = from_utf8(&*signature_decrypted).iter().map(|&b| format!("{:?}", b)).collect::<Vec<String>>().join("");
+                // remove quotation marks
+                let signature_decrypted_utf8 = signature_decrypted_utf8.replace("\"", "");
+
+                if b {
+                    println!("Writing signature, message and result to {}_signature_valid.txt file...", path.file_stem().unwrap().to_str().unwrap());
+                        fs::write(format!("./src/results/{}{}", path.file_stem().unwrap().to_str().unwrap(), "_signature_valid.txt"), format!("decimal signature: {}\nhexadecimal signature: {}\ndecrypted signature: {}\noriginal message: {}\nvalid signature: {}", signature_decimal, signature_hexadecimal, signature_decrypted_utf8, message_to_sign, b)).expect(format!("Unable to write {}_signature.txt file", path.file_stem().unwrap().to_str().unwrap()).as_str());
+                } else {
+                    println!("Writing signature, message and result to {}_signature_invalid.txt file...", path.file_stem().unwrap().to_str().unwrap());
+                        fs::write(format!("./src/results/{}{}", path.file_stem().unwrap().to_str().unwrap(), "_signature_invalid.txt"), format!("decimal signature: {}\nhexadecimal signature: {}\ndecrypted signature: {}\noriginal message: {}\nvalid signature: {}", signature_decimal, signature_hexadecimal, signature_decrypted_utf8, message_to_sign, b)).expect(format!("Unable to write {}_signature.txt file", path.file_stem().unwrap().to_str().unwrap()).as_str());
+                }
+
+                println!("Done!");
+                println!("When tou want to see the file(s), type 'exit' :)");
+            }
             "logout" => {
                 let response = smart_card_commands.logout();
                 smart_card_commands.get_logout_status(response);
@@ -84,6 +135,7 @@ fn shell() {
                 println!("chpin - Changes the PIN of the user.");
                 println!("gpubk - Gets the public key of the user.");
                 println!("gsign - Gets the signature of a message.");
+                println!("gsign_file - Gets the signature of a message in a file and store the results in another file.");
                 println!("logout - Logs out the user.");
                 println!("help - Prints this help message.");
                 println!("exit - Exits the shell.");
