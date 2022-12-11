@@ -51,7 +51,7 @@ impl SmartCardCommands {
         let auth_apdu_command = apdu::Command::new_with_payload(0x00, 0x20, 0x00, 0x00, v); // vec![0x00, 0x00, 0x00, 0x00]);
         let auth_apdu_response = self.smart_card.send_apdu_command(auth_apdu_command).unwrap();
         assert_eq!(0x61, auth_apdu_response.trailer.0); // OK
-        println!("{:?}", auth_apdu_response);
+        // println!("{:?}", auth_apdu_response);
         auth_apdu_response.trailer.1
     }
 
