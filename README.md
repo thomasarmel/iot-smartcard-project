@@ -119,5 +119,8 @@ The public key format is as following:
 
 ```
 cd iot-smartcard-client-rs/
-cargo run
+```
+Then, before launching the command to run the Rust client, the card must be plugged in.
+```
+cargo +nightly run --release
 ```
