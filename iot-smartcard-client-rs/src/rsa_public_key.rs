@@ -7,6 +7,7 @@ pub struct RSAPublicKey {
     modulus: UBig,
 }
 
+/// Represents a public key for RSA signature verification.
 impl RSAPublicKey {
     pub fn new(exponent: &[u8], modulus: &[u8]) -> Self {
         Self {
@@ -15,6 +16,7 @@ impl RSAPublicKey {
         }
     }
 
+    /// Checks if given signature is valid for given message
     pub fn check_signature(&self, message: &[u8], signature: &[u8]) -> bool {
         let modulo_ring = ModuloRing::new(&self.modulus);
         let signature = UBig::from_be_bytes(signature);
@@ -23,6 +25,7 @@ impl RSAPublicKey {
         &decrypted_signature[decrypted_signature.len() - message.len()..] == message
     }
 
+    /// Decrypts given signature for given message and returns the decrypted message
     pub fn decrypt_signature(&self, message: &[u8], signature: &[u8]) -> Vec<u8> {
         let modulo_ring = ModuloRing::new(&self.modulus);
         let signature = UBig::from_be_bytes(signature);

@@ -8,6 +8,7 @@ fn vec8_to_u32(input: &[u8]) -> u32 {
     input.iter().fold(0, |accum, v| (accum << 8) + *v as u32)
 }
 
+/// Wait for user command
 fn shell() {
     let smart_card_commands = SmartCardCommands::new().unwrap();
 

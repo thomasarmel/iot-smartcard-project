@@ -8,8 +8,9 @@ pub struct SmartCard {
 
 #[allow(dead_code)]
 impl SmartCard {
-    // We assume here there is only 1 smartcard reader connected to the computer.
+    /// Create a new smartcard object, connects to the first smartcard reader
     pub fn new() -> Result<SmartCard, anyhow::Error> {
+        // We assume here there is only 1 smartcard reader connected to the computer.
         // Establish a PC/SC context.
         let ctx = Context::establish(Scope::User)
             .map_err(|err| anyhow::anyhow!("Failed to establish context: {}", err))?;
@@ -31,7 +32,7 @@ impl SmartCard {
         })
     }
 
-    // TODO: concatenate check size commands
+    /// Sends an APDU command to the smartcard and returns the response.
     pub fn send_apdu_command(&self, apdu_command: apdu::Command) -> Result<apdu::Response, anyhow::Error> {
         let mut rapdu_buf = [0; MAX_BUFFER_SIZE];
 
@@ -42,6 +43,7 @@ impl SmartCard {
     }
 }
 
+/// Represents an error that can occur when communicating with a smartcard.
 #[derive(Error, Debug)]
 pub enum SmartCardError {
     #[error("Failed to establish context: {0}")]
