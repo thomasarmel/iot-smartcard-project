@@ -114,3 +114,10 @@ The public key format is as following:
 [**2 bytes - exponent size**][**exponent**][**2 bytes - modulus size**][**modulus**]
 
 (Note that exponent will likely be *0x01 0x00 0x01*, 65537)
+
+## Run the Rust client
+
+```
+cd iot-smartcard-client-rs/
+cargo run
+```
