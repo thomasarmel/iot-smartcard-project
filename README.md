@@ -1,6 +1,34 @@
 # iot-smartcard-project
 Java smartcard project
 
+## Table of contents
+
+**[Java applet - example](#java-applet---example)**
+
+  * [Compile Java applet](#compile-java-applet)
+  * [Convert .class to .cap](#convert-class-to-cap)
+
+**[GPSHELL scripts](#gpshell-scripts)**
+
+  * [List applets installed on card](#list-applets-installed-on-card)
+  * [Upload cap to card](#upload-cap-to-card)
+  * [Delete installed applet on card](#delete-installed-applet-on-card)
+
+**[APDU commands](#apdu-commands)**
+
+  * [SELECT installed applet](#select-installed-applet)
+  * [Run command 0x40 without parameter](#run-command-0x40-without-parameter)
+
+**[Build project](#build-project)**
+
+**[Good to know](#good-to-know)**
+
+  * [Fetch response](#fetch-response)
+  * [Commands that expect an response](#commands-that-expect-an-response)
+  * [RSA public key format](#rsa-public-key-format)
+
+**[Run the Rust client](#run-the-rust-client)**
+
 ## Java applet - example
 
 ### Compile Java applet:
